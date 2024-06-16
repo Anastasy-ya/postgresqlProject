@@ -1,5 +1,6 @@
-const { Pool } = require("pg");
-require("dotenv").config();
+const { Pool } = require('pg');
+
+require('dotenv').config();
 
 const { USER, HOST, PASSWORD, DATABASE, } = process.env;
 const DATABASE_URL = 'postgresql://' + USER + ':' + PASSWORD + '@' + HOST + '/' + DATABASE + '?sslmode=require';
@@ -12,16 +13,14 @@ const pool = new Pool({
 });
 
 const getUsers = (request, response) => {
-  pool.query("SELECT * FROM users ORDER BY id ASC", (error, results) => {
+  pool.query('SELECT * FROM users ORDER BY id ASC', (error, results) => {
     if (error) {
-      throw error;
+      return response.status(error.status).send(error.message);
     }
     response.status(200).json(results.rows);
   });
 };
 
-// добавить файл с расшифровкой ошибок
-// добавить 404
 const createUser = (request, response) => {
   const { first_name, last_name, age, gender, problems } = request.body;
 
@@ -76,7 +75,7 @@ const updateUser = (request, response) => {
   }
 
   pool.query(
-    "UPDATE users SET first_name = $1, last_name = $2, age = $3, gender = $4, problems = $5 WHERE id = $6",
+    'UPDATE users SET first_name = $1, last_name = $2, age = $3, gender = $4, problems = $5 WHERE id = $6',
     [first_name, last_name, age, gender, problems, id],
     (error, results) => {
       if (error) {
@@ -98,6 +97,8 @@ module.exports = {
   createUser,
   updateUser,
 };
+
+//TODO добавить валидацию если будет время
 
 
 
