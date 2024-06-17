@@ -20,7 +20,6 @@ const { PORT } = process.env;
 const cors = require('cors');
 
 const { requestLogger, errorLogger } = require('./middlewares/logger');
-// const errorHandler = require('./middlewares/error');
 
 app.use(cors({
   origin: [
@@ -47,10 +46,6 @@ app.get('*', (_, res) => {
 });
 
 app.use(errorLogger); // логгер ошибок
-
-// app.use(errors());
-
-// app.use(errorHandler); // централизованный обработчик ошибок
 
 app.listen(PORT, () => {
   console.log(`App running on port ${PORT}.`);
