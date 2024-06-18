@@ -78,26 +78,46 @@ const getUsers = (request, response) => {
 
 ////////////////////////////
 
+// Функция для вставки записи в таблицу user_changes и возврата action_id
+const insertUserChangeLog = (client, userId, action) => {
+  const insertLogQuery = `INSERT INTO user_changes (user_id, action_date, action) VALUES ($1, CURRENT_TIMESTAMP, $2) RETURNING action_id`;
+  return client.query(insertLogQuery, [userId, action])
+    .then(logResult => {
+      if (logResult.rows.length === 0) {
+        throw new Error('Failed to create log');
+      }
+      return logResult.rows[0].action_id;
+    });
+};
+
+// Основная функция для создания пользователя
+// TODO action имеет смысл передавать не в запросе, а определять на сервере, доделать позже
 const createUser = (request, response) => {
   const { first_name, last_name, age, gender, problems, action } = request.body;
 
+  // Проверка наличия всех обязательных полей
   if (!first_name || !last_name || !age || !gender || typeof problems === 'undefined' || !action) {
     return response.status(400).send('All fields are required');
   }
 
+  // Проверка типов данных
   if (typeof first_name !== 'string' || typeof last_name !== 'string' || typeof gender !== 'string' || typeof action !== 'string') {
     return response.status(400).send('Invalid data type');
   }
 
+  // Проверка корректности возраста
   if (typeof age !== 'number' || age <= 0) {
     return response.status(400).send('Invalid age');
   }
 
+  // Переменные для хранения идентификаторов
   let userId = null;
   let actionId = null;
 
+  // Подключение к базе данных
   pool.connect()
     .then(client => {
+      // Функция для освобождения клиента базы данных
       const releaseClient = () => {
         if (!client.released) {
           client.released = true;
@@ -105,25 +125,26 @@ const createUser = (request, response) => {
         }
       };
 
+      // Начало транзакции
       return client.query('BEGIN')
         .then(() => {
+          // Вставка нового пользователя в таблицу users
           const insertUserQuery = `INSERT INTO users (first_name, last_name, age, gender, problems) VALUES ($1, $2, $3, $4, $5) RETURNING id`;
           return client.query(insertUserQuery, [first_name, last_name, age, gender, problems]);
         })
         .then(result => {
+          // Проверка успешности вставки пользователя
           if (result.rows.length === 0) {
             throw new Error('Failed to create user');
           }
           userId = result.rows[0].id;
 
-          const insertLogQuery = `INSERT INTO user_changes (user_id, action_date, action) VALUES ($1, CURRENT_TIMESTAMP, $2) RETURNING action_id`;
-          return client.query(insertLogQuery, [userId, action]);
+          // Вставка записи в таблицу user_changes
+          return insertUserChangeLog(client, userId, action);
         })
-        .then(logResult => {
-          if (logResult.rows.length === 0) {
-            throw new Error('Failed to create log');
-          }
-          actionId = logResult.rows[0].action_id;
+        .then(insertedActionId => {
+          // Сохранение actionId и завершение транзакции
+          actionId = insertedActionId;
           return client.query('COMMIT')
             .then(() => {
               releaseClient();
@@ -131,6 +152,7 @@ const createUser = (request, response) => {
             });
         })
         .catch(error => {
+          // Откат транзакции в случае ошибки
           return client.query('ROLLBACK')
             .then(() => {
               releaseClient();
@@ -139,10 +161,12 @@ const createUser = (request, response) => {
             });
         })
         .finally(() => {
+          // Освобождение клиента базы данных
           releaseClient();
         });
     })
     .catch(error => {
+      // Обработка ошибки подключения к базе данных
       console.error('Connection error:', error);
       response.status(500).send('An error occurred while connecting to the database');
     });
