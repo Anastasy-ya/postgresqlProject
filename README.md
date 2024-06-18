@@ -15,15 +15,19 @@ DATABASE=<db-name>
 PASSWORD=<password>
 
 PORT=5432
-
 ```
+
+
 Строка, содержащая данные для подключения, располагается в Dashboard панели управления
 
+```
 postgres://alex:AbC123dEf@ep-cool-darkness-123456.us-east-2.aws.neon.tech/dbname
            ^    ^         ^                                               ^
      role -|    |         |- hostname                                     |- database
                 |
                 |- password
+
+```
 
 [Документация](https://neon.tech/docs/get-started-with-neon/connect-neon "Переход на сайт neon.tech")
 
@@ -115,11 +119,11 @@ npm start
 
 ## Проверка
 
-_get users:_
+### get users:
 
 GET http://localhost:5432
 
-_create user:_
+### create user:
 
 POST http://localhost:5432/create-user
 <br>
@@ -133,7 +137,7 @@ POST http://localhost:5432/create-user
 }
 ```
 
-_change user:_
+### change user:
 _id required_
 
 PATCH http://localhost:5432/update-user?id=200
@@ -148,13 +152,11 @@ PATCH http://localhost:5432/update-user?id=200
 }
 ```
 
-_404:_
+### 404:
 
 GET http://localhost:5432/sdfg
 
 ## Планы по улучшению:
  - Написать тесты
- <br>
  - Рефакторинг
- <br>
  - Валидация входных значений при помощи express-validator
