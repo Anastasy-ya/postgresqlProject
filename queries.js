@@ -13,70 +13,23 @@ const pool = new Pool({
   },
 });
 
-// const makeLog = (request, response) => {
+// Обработка ошибок подключения к базе данных
+pool.on('error', (err) => {
+  console.error('Unexpected error on idle client', err);
+  process.exit(-1); // Завершение процесса в случае непредвиденной ошибки
+});
 
-//   pool.query(
-//     `INSERT INTO user_changes (user_id, action_date, action) VALUES ($1, CURRENT_TIMESTAMP, $2) RETURNING action_id`,
-//     [user_id, action],
-//     (error, results) => {
-//       if (error) {
-//         console.error('logs are not created. Database error:', error);
-//         return response.status(500).send('An error occurred while creating the user');
-//       }
-
-//       if (results.rows.length === 0) {
-//         return response.status(500).send('logs are not created. Failed to create user');
-//       }
-
-//       response.status(201).send(`logs created. User added with ID: ${results.rows[0].action_id}`);
-//     }
-//   );
-// };
-
-const getUsers = (request, response) => {
+// Функция для получения всех пользователей
+const getUsers = (_, response) => {
   pool.query('SELECT * FROM users ORDER BY id ASC', (error, results) => {
     if (error) {
-      return response.status(error.status).send(error.message);
+      console.error('Database query error', error);
+      // Установить статус 500 в случае ошибки базы данных и отправить сообщение об ошибке
+      return response.status(500).send('An error occurred while fetching users');
     }
     response.status(200).json(results.rows);
   });
 };
-
-// const createUser = (request, response) => {
-//   const { first_name, last_name, age, gender, problems } = request.body;
-
-//   if (!first_name || !last_name || !age || !gender || typeof problems === 'undefined') {
-//     return response.status(400).send('All fields are required');
-//   }
-
-//   if (typeof first_name !== 'string' || typeof last_name !== 'string' || typeof gender !== 'string') {
-//     return response.status(400).send('Invalid data type');
-//   }
-
-//   if (typeof age !== 'number' || age <= 0) {
-//     return response.status(400).send('Invalid age');
-//   }
-
-//   pool.query(
-//     `INSERT INTO users (first_name, last_name, age, gender, problems) VALUES ($1, $2, $3, $4, $5) RETURNING id`,
-//     [first_name, last_name, age, gender, problems],
-//     (error, results) => {
-//       if (error) {
-//         console.error('Database error:', error);
-//         return response.status(500).send('An error occurred while creating the user');
-//       }
-
-//       if (results.rows.length === 0) {
-//         return response.status(500).send('Failed to create user');
-//       }
-
-//       response.status(201).send(`User added with ID: ${results.rows[0].id}`);
-
-//     }
-//   );
-// };
-
-////////////////////////////начало 
 
 // Функция для вставки записи в таблицу user_changes и возврата action_id
 const insertUserChangeLog = (client, userId, action) => {
@@ -95,12 +48,12 @@ const createUser = (request, response) => {
   const { first_name, last_name, age, gender, problems } = request.body;
 
   // Проверка наличия всех обязательных полей
-  if (!first_name || !last_name || !age || !gender || typeof problems === 'undefined' || !action) {
+  if (!first_name || !last_name || !age || !gender || typeof problems === 'undefined') {
     return response.status(400).send('All fields are required');
   }
 
   // Проверка типов данных
-  if (typeof first_name !== 'string' || typeof last_name !== 'string' || typeof gender !== 'string' || typeof action !== 'string') {
+  if (typeof first_name !== 'string' || typeof last_name !== 'string' || typeof gender !== 'string') {
     return response.status(400).send('Invalid data type');
   }
 
@@ -139,7 +92,7 @@ const createUser = (request, response) => {
           userId = result.rows[0].id;
 
           // Вставка записи в таблицу user_changes
-          return insertUserChangeLog(client, userId, 'creating'); //проверить что работает
+          return insertUserChangeLog(client, userId, 'create user'); //проверить что работает
         })
         .then(insertedActionId => {
           // Сохранение actionId и завершение операции
@@ -156,7 +109,7 @@ const createUser = (request, response) => {
             .then(() => {
               releaseClient();
               console.error('Database error:', error);
-              response.status(500).send('An error occurred while creating the user and log');
+              response.status(500).send('An error occurred while creating the user and log. Error:', error);
             });
         })
         .finally(() => {
@@ -176,117 +129,109 @@ const updateUser = (request, response) => {
   const id = request.query.id;
   const { first_name, last_name, age, gender, problems } = request.body;
 
+  // Проверяем наличие обязательного поля id
   if (!id) {
     return response.status(400).send('User ID is required');
   }
 
-  // if (!first_name || !last_name || typeof age === 'undefined' || !gender || typeof problems === 'undefined') {
-  //   return response.status(400).send('All fields are required');
-  // }
-
-  if (typeof first_name !== 'string' || typeof last_name !== 'string' || typeof gender !== 'string') {
-    return response.status(400).send('Invalid data type');//TODO подумать как проверить типы, но не делать замену обязательной
+  // Проверка типов данных только если поля переданы
+  if (first_name !== undefined && typeof first_name !== 'string' ||
+      last_name !== undefined && typeof last_name !== 'string' ||
+      gender !== undefined && typeof gender !== 'string') {
+    return response.status(400).send('Invalid data type'); // Проверка типов данных для строк
   }
 
-  if (typeof age !== 'number' || age <= 17) {//TODO подумать как проверить типы, но не делать замену обязательной
-    return response.status(400).send('Invalid age');
+  if (age !== undefined && (typeof age !== 'number' || age <= 0)) {
+    return response.status(400).send('Invalid age'); // Проверка типа данных и значения возраста
   }
 
   let client;
   let actionId = null;
 
+  // Подключение к базе данных
   pool.connect()
     .then(connectedClient => {
       client = connectedClient;
+      
       // Функция для освобождения клиента базы данных
       const releaseClient = () => {
         if (!client.released) {
           client.released = true;
-          client.release();
+          client.release(); // Освобождение клиента, возвращение его в пул подключений
         }
       };
 
+      // Начало операции
       return client.query('BEGIN')
         .then(() => {
-          const updateUserQuery = `UPDATE users SET first_name = $1, last_name = $2, age = $3, gender = $4, problems = $5 WHERE id = $6`;
-          return client.query(updateUserQuery, [first_name, last_name, age, gender, problems, id]);
+          // Создание запроса для обновления только тех полей, которые переданы
+          const fields = [];
+          const values = [];
+          let index = 1;
+
+          if (first_name !== undefined) {
+            fields.push(`first_name = $${index++}`);
+            values.push(first_name); // Добавление имени в массив значений
+          }
+          if (last_name !== undefined) {
+            fields.push(`last_name = $${index++}`);
+            values.push(last_name); // Добавление фамилии в массив значений
+          }
+          if (age !== undefined) {
+            fields.push(`age = $${index++}`);
+            values.push(age); // Добавление возраста в массив значений
+          }
+          if (gender !== undefined) {
+            fields.push(`gender = $${index++}`);
+            values.push(gender); // Добавление пола в массив значений
+          }
+          if (problems !== undefined) {
+            fields.push(`problems = $${index++}`);
+            values.push(problems); // Добавление проблем в массив значений
+          }
+
+          // Добавление id в массив values
+          values.push(id);
+
+          // Создание запроса для обновления
+          const updateUserQuery = `UPDATE users SET ${fields.join(', ')} WHERE id = $${index}`;
+          return client.query(updateUserQuery, values); // Выполнение запроса обновления
         })
         .then(result => {
           if (result.rowCount === 0) {
-            throw new Error('User not found');
+            throw new Error('User not found'); // Обработка случая, когда пользователь не найден
           }
-          return insertUserChangeLog(client, id, 'update');
+          return insertUserChangeLog(client, id, 'update user'); // Вставка записи в лог изменений пользователя
         })
-
         .then(insertedActionId => {
           actionId = insertedActionId;
-
-          return client.query('COMMIT');
+          return client.query('COMMIT'); // Завершение операции
         })
         .then(() => {
-          releaseClient();
-          response.status(200).send(`User modified with ID: ${id}, Log ID: ${actionId}`);
+          releaseClient(); // Освобождение клиента
+          response.status(200).send(`User modified with ID: ${id}, Log ID: ${actionId}`); // Отправка успешного ответа
         })
         .catch(error => {
-          return client.query('ROLLBACK')
+          return client.query('ROLLBACK') // Откат операции в случае ошибки
             .then(() => {
-              releaseClient();
+              releaseClient(); // Освобождение клиента
               if (error.message === 'User not found') {
-                response.status(404).send(error.message);
+                response.status(404).send(error.message); // Отправка ошибки, если пользователь не найден
               } else {
                 console.error('Database error:', error);
-                response.status(500).send('An error occurred while updating the user');
+                response.status(500).send('An error occurred while updating the user'); // Отправка общей ошибки
               }
             });
         })
         .finally(() => {
-          releaseClient();
+          releaseClient(); // Освобождение клиента в любом случае
         });
     })
     .catch(error => {
       console.error('Connection error:', error);
-      response.status(500).send('An error occurred while connecting to the database', error);
+      response.status(500).send('An error occurred while connecting to the database. Error:', error); // Обработка ошибки подключения к базе данных
     });
 };
-////////////////////////////конец
-
-// const updateUser = (request, response) => {
-//   const id = request.query.id;
-//   const { first_name, last_name, age, gender, problems } = request.body;
-
-//   if (!id) {
-//     return response.status(400).send('User ID is required');
-//   }
-
-//   if (!first_name || !last_name || typeof age === 'undefined' || !gender || typeof problems === 'undefined') {
-//     return response.status(400).send('All fields are required');
-//   }
-
-//   if (typeof first_name !== 'string' || typeof last_name !== 'string' || typeof gender !== 'string') {
-//     return response.status(400).send('Invalid data type');
-//   }
-
-//   if (typeof age !== 'number' || age <= 0) {
-//     return response.status(400).send('Invalid age');
-//   }
-
-//   pool.query(
-//     'UPDATE users SET first_name = $1, last_name = $2, age = $3, gender = $4, problems = $5 WHERE id = $6',
-//     [first_name, last_name, age, gender, problems, id],
-//     (error, results) => {
-//       if (error) {
-//         console.error('Database error:', error);
-//         return response.status(500).send('An error occurred while updating the user');
-//       }
-
-//       if (results.rowCount === 0) {
-//         return response.status(404).send('User not found');
-//       }
-
-//       response.status(200).send(`User modified with ID: ${id}`);
-//     }
-//   );
-// };
 
 module.exports = {
   getUsers,
@@ -295,12 +240,8 @@ module.exports = {
 };
 
 //TODO добавить валидацию если будет время
-//TODO проверить одинаковость кавычек
-
-// посчитать количество строк в таблице product, у которых в category - electronics
-// SELECT COUNT(*)
-// FROM product
-// WHERE category = 'electronics';
+//TODO подумать о рефакторинге крупных функций
+//TODO написать тесты
 
 
 

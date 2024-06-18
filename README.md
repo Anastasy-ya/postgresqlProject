@@ -112,3 +112,49 @@ cd postgresqlProject
 npm install
 <br>
 npm start
+
+## Проверка
+
+_get users:_
+
+GET http://localhost:5432
+
+_create user:_
+
+POST http://localhost:5432/create-user
+<br>
+```
+{
+    "first_name": "S6E", //string(3) required
+    "last_name": "ITT", //string(3) required
+    "age": 90, //int(18-100) required
+    "gender": "f", //char 'm'/'f' required
+    "problems": false //boolean false/true required
+}
+```
+
+_change user:_
+_id required_
+
+PATCH http://localhost:5432/update-user?id=200
+<br>
+```
+{
+    "first_name": "S6E", //string(3)
+    "last_name": "ITT", //string(3)
+    "age": 18, //int(18-100)
+    "gender": "f", //char 'm'/'f'
+    "problems": false //boolean false/true
+}
+```
+
+_404:_
+
+GET http://localhost:5432/sdfg
+
+## Планы по улучшению:
+ - Написать тесты
+ <br>
+ - Рефакторинг
+ <br>
+ - Валидация входных значений при помощи express-validator
