@@ -23,11 +23,11 @@ const pool = new Pool({
 //         console.error('logs are not created. Database error:', error);
 //         return response.status(500).send('An error occurred while creating the user');
 //       }
-  
+
 //       if (results.rows.length === 0) {
 //         return response.status(500).send('logs are not created. Failed to create user');
 //       }
-  
+
 //       response.status(201).send(`logs created. User added with ID: ${results.rows[0].action_id}`);
 //     }
 //   );
@@ -78,7 +78,75 @@ const getUsers = (request, response) => {
 
 ////////////////////////////
 
+const createUser = (request, response) => {
+  const { first_name, last_name, age, gender, problems, action } = request.body;
 
+  if (!first_name || !last_name || !age || !gender || typeof problems === 'undefined' || !action) {
+    return response.status(400).send('All fields are required');
+  }
+
+  if (typeof first_name !== 'string' || typeof last_name !== 'string' || typeof gender !== 'string' || typeof action !== 'string') {
+    return response.status(400).send('Invalid data type');
+  }
+
+  if (typeof age !== 'number' || age <= 0) {
+    return response.status(400).send('Invalid age');
+  }
+
+  let userId = null;
+  let actionId = null;
+
+  pool.connect()
+    .then(client => {
+      const releaseClient = () => {
+        if (!client.released) {
+          client.released = true;
+          client.release();
+        }
+      };
+
+      return client.query('BEGIN')
+        .then(() => {
+          const insertUserQuery = `INSERT INTO users (first_name, last_name, age, gender, problems) VALUES ($1, $2, $3, $4, $5) RETURNING id`;
+          return client.query(insertUserQuery, [first_name, last_name, age, gender, problems]);
+        })
+        .then(result => {
+          if (result.rows.length === 0) {
+            throw new Error('Failed to create user');
+          }
+          userId = result.rows[0].id;
+
+          const insertLogQuery = `INSERT INTO user_changes (user_id, action_date, action) VALUES ($1, CURRENT_TIMESTAMP, $2) RETURNING action_id`;
+          return client.query(insertLogQuery, [userId, action]);
+        })
+        .then(logResult => {
+          if (logResult.rows.length === 0) {
+            throw new Error('Failed to create log');
+          }
+          actionId = logResult.rows[0].action_id;
+          return client.query('COMMIT')
+            .then(() => {
+              releaseClient();
+              response.status(201).send(`User and log created with User ID: ${userId} and Log ID: ${actionId}`);
+            });
+        })
+        .catch(error => {
+          return client.query('ROLLBACK')
+            .then(() => {
+              releaseClient();
+              console.error('Database error:', error);
+              response.status(500).send('An error occurred while creating the user and log');
+            });
+        })
+        .finally(() => {
+          releaseClient();
+        });
+    })
+    .catch(error => {
+      console.error('Connection error:', error);
+      response.status(500).send('An error occurred while connecting to the database');
+    });
+};
 ////////////////////////////
 
 const updateUser = (request, response) => {
