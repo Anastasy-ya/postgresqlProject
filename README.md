@@ -1,5 +1,5 @@
 # postgresqlProject
-_Изучение облачной бд_
+_Изучение облачной базы данных_
 
 ## Запуск
 git clone git@github.com:Anastasy-ya/postgresqlProject.git
@@ -73,4 +73,18 @@ $$ LANGUAGE plpgsql;
 
 -- Вставка пользователей
 SELECT insert_random_person(1000);
+```
+
+Cкрипт для создания таблицы с историей изменения первой таблицы
+
+```
+CREATE TABLE user_changes (
+  action_id SERIAL PRIMARY KEY,
+  user_id INTEGER NOT NULL,
+  action_date DATE NOT NULL,
+  action VARCHAR(255) NOT NULL,
+  FOREIGN KEY (user_id) REFERENCES users(id)
+    ON UPDATE CASCADE
+    ON DELETE CASCADE
+);
 ```

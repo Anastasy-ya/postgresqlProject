@@ -7,10 +7,31 @@ const DATABASE_URL = 'postgresql://' + USER + ':' + PASSWORD + '@' + HOST + '/' 
 
 const pool = new Pool({
   connectionString: DATABASE_URL,
+  //временное решение до подключения ssl сертификата
   ssl: {
     rejectUnauthorized: false,
   },
 });
+
+// const makeLog = (request, response) => {
+
+//   pool.query(
+//     `INSERT INTO user_changes (user_id, action_date, action) VALUES ($1, CURRENT_TIMESTAMP, $2) RETURNING action_id`,
+//     [user_id, action],
+//     (error, results) => {
+//       if (error) {
+//         console.error('logs are not created. Database error:', error);
+//         return response.status(500).send('An error occurred while creating the user');
+//       }
+  
+//       if (results.rows.length === 0) {
+//         return response.status(500).send('logs are not created. Failed to create user');
+//       }
+  
+//       response.status(201).send(`logs created. User added with ID: ${results.rows[0].action_id}`);
+//     }
+//   );
+// };
 
 const getUsers = (request, response) => {
   pool.query('SELECT * FROM users ORDER BY id ASC', (error, results) => {
@@ -21,38 +42,44 @@ const getUsers = (request, response) => {
   });
 };
 
-const createUser = (request, response) => {
-  const { first_name, last_name, age, gender, problems } = request.body;
+// const createUser = (request, response) => {
+//   const { first_name, last_name, age, gender, problems } = request.body;
 
-  if (!first_name || !last_name || !age || !gender || typeof problems === 'undefined') {
-    return response.status(400).send('All fields are required');
-  }
+//   if (!first_name || !last_name || !age || !gender || typeof problems === 'undefined') {
+//     return response.status(400).send('All fields are required');
+//   }
 
-  if (typeof first_name !== 'string' || typeof last_name !== 'string' || typeof gender !== 'string') {
-    return response.status(400).send('Invalid data type');
-  }
+//   if (typeof first_name !== 'string' || typeof last_name !== 'string' || typeof gender !== 'string') {
+//     return response.status(400).send('Invalid data type');
+//   }
 
-  if (typeof age !== 'number' || age <= 0) {
-    return response.status(400).send('Invalid age');
-  }
+//   if (typeof age !== 'number' || age <= 0) {
+//     return response.status(400).send('Invalid age');
+//   }
 
-  pool.query(
-    `INSERT INTO users (first_name, last_name, age, gender, problems) VALUES ($1, $2, $3, $4, $5) RETURNING id`,
-    [first_name, last_name, age, gender, problems],
-    (error, results) => {
-      if (error) {
-        console.error('Database error:', error);
-        return response.status(500).send('An error occurred while creating the user');
-      }
+//   pool.query(
+//     `INSERT INTO users (first_name, last_name, age, gender, problems) VALUES ($1, $2, $3, $4, $5) RETURNING id`,
+//     [first_name, last_name, age, gender, problems],
+//     (error, results) => {
+//       if (error) {
+//         console.error('Database error:', error);
+//         return response.status(500).send('An error occurred while creating the user');
+//       }
 
-      if (results.rows.length === 0) {
-        return response.status(500).send('Failed to create user');
-      }
+//       if (results.rows.length === 0) {
+//         return response.status(500).send('Failed to create user');
+//       }
 
-      response.status(201).send(`User added with ID: ${results.rows[0].id}`);
-    }
-  );
-};
+//       response.status(201).send(`User added with ID: ${results.rows[0].id}`);
+
+//     }
+//   );
+// };
+
+////////////////////////////
+
+
+////////////////////////////
 
 const updateUser = (request, response) => {
   const id = request.query.id;
@@ -99,6 +126,11 @@ module.exports = {
 };
 
 //TODO добавить валидацию если будет время
+
+// посчитать количество строк в таблице product, у которых в category - electronics
+// SELECT COUNT(*)
+// FROM product
+// WHERE category = 'electronics';
 
 
 
