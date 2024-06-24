@@ -1,0 +1,329 @@
+{
+	"info": {
+		"_postman_id": "9a70ec91-b2cd-49b9-a00c-546258cb21e6",
+		"name": "servers",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "26694828"
+	},
+	"item": [
+		{
+			"name": "big DB",
+			"item": [
+				{
+					"name": "bigDB get /users",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:5432/users",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5432",
+							"path": [
+								"users"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "bigDB page not found",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:5432/_404_",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5432",
+							"path": [
+								"_404_"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "postgresqlproject",
+			"item": [
+				{
+					"name": "create",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status is CREATED\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"first_name\": \"fdt\",\n    \"last_name\": \"ITT\",\n    \"age\": 90,\n    \"gender\": \"f\",\n    \"problems\": false\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:5432/update-user?id=2",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5432",
+							"path": [
+								"update-user"
+							],
+							"query": [
+								{
+									"key": "id",
+									"value": "2"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "create",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status is CREATED\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"first_name\": \"S6E\",\n    \"last_name\": \"ITT\",\n    \"age\": 90,\n    \"gender\": \"f\",\n    \"problems\": false\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:5432/create-user",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5432",
+							"path": [
+								"create-user"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get /users",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:5432/users",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5432",
+							"path": [
+								"users"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "page not found",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:5432/_404_",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5432",
+							"path": [
+								"_404_"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "history_log",
+			"item": [
+				{
+					"name": "get /user",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:5432/users",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5432",
+							"path": [
+								"users"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "get /users",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:5432/users",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5432",
+							"path": [
+								"users"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "page not found",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:5432/_404_",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "5432",
+							"path": [
+								"_404_"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"auth": {
+		"type": "bearer"
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"pm.test(\"JSON body\", function () {",
+					"    pm.response.to.have.jsonBody();",
+					"});"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "USER_EMAIL",
+			"value": "user@email.com",
+			"type": "string"
+		},
+		{
+			"key": "USER_PASSWORD",
+			"value": "qwerty123",
+			"type": "string"
+		},
+		{
+			"key": "USER_NAME",
+			"value": "Name",
+			"type": "string"
+		},
+		{
+			"key": "USER_ABOUT",
+			"value": "About",
+			"type": "string"
+		},
+		{
+			"key": "USER_AVATAR",
+			"value": "http://www.example.com",
+			"type": "string"
+		},
+		{
+			"key": "USER_NAME_MODIFIED",
+			"value": "Name modified",
+			"type": "string"
+		},
+		{
+			"key": "USER_ABOUT_MODIFIED",
+			"value": "About modified",
+			"type": "string"
+		},
+		{
+			"key": "USER_AVATAR_MODIFIED",
+			"value": "http://www.example.com/modified",
+			"type": "string"
+		},
+		{
+			"key": "CARD_NAME",
+			"value": "Card name",
+			"type": "string"
+		},
+		{
+			"key": "CARD_LINK",
+			"value": "http://www.example.com",
+			"type": "string"
+		},
+		{
+			"key": "BASE_URL",
+			"value": "http://localhost:3001"
+		}
+	]
+}

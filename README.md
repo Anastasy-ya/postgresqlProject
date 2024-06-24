@@ -1,6 +1,18 @@
 # postgresqlProject
 _Изучение облачной базы данных и синтаксиса postgresql_
 
+JavaScript - Express.js - cors - node-postgres - express-rate-limit
+
+# Сервис работает с таблицей users возвращает список пользователей, 
+# создает нового или изменяет существующего, отправляя лог изменений в user_changes
+
+
+## Ссылки
+
+https://github.com/Anastasy-ya/postgresqlProject
+https://github.com/Anastasy-ya/history-log-users-server
+https://github.com/Anastasy-ya/BigDB
+
 ## Используется облачная база данных postgresql neon.tech
 
 _Для подключения необходим .env файл в корневой директории приложения:_
@@ -14,7 +26,7 @@ DATABASE=<db-name>
 
 PASSWORD=<password>
 
-PORT=5432
+PORT=3001
 ```
 
 
@@ -121,11 +133,11 @@ npm start
 
 ### get users:
 
-GET http://localhost:5432
+GET http://localhost:3001
 
 ### create user:
 
-POST http://localhost:5432/create-user
+POST http://localhost:3001/create-user
 <br>
 ```
 {
