@@ -21,7 +21,7 @@ pool.on('error', (err) => {
 
 // Функция для получения всех пользователей
 const getUsers = (_, response) => {
-  pool.query('SELECT * FROM users ORDER BY id ASC', (error, results) => {
+  pool.query('SELECT * FROM persons ORDER BY id ASC', (error, results) => {
     if (error) {
       console.error('Database query error', error);
       // Установить статус 500 в случае ошибки базы данных и отправить сообщение об ошибке
@@ -31,9 +31,9 @@ const getUsers = (_, response) => {
   });
 };
 
-// Функция для вставки записи в таблицу user_changes и возврата action_id
+// Функция для вставки записи в таблицу person_changes и возврата action_id
 const insertUserChangeLog = (client, userId, action) => {
-  const insertLogQuery = `INSERT INTO user_changes (user_id, action_date, action) VALUES ($1, CURRENT_TIMESTAMP, $2) RETURNING action_id`;
+  const insertLogQuery = `INSERT INTO person_changes (user_id, action_date, action) VALUES ($1, CURRENT_TIMESTAMP, $2) RETURNING action_id`;
   return client.query(insertLogQuery, [userId, action])
     .then(logResult => {
       if (logResult.rows.length === 0) {
@@ -81,7 +81,7 @@ const createUser = (request, response) => {
       return client.query('BEGIN')
         .then(() => {
           // Вставка нового пользователя в таблицу users
-          const insertUserQuery = `INSERT INTO users (first_name, last_name, age, gender, problems) VALUES ($1, $2, $3, $4, $5) RETURNING id`;
+          const insertUserQuery = `INSERT INTO persons (first_name, last_name, age, gender, problems) VALUES ($1, $2, $3, $4, $5) RETURNING id`;
           return client.query(insertUserQuery, [first_name, last_name, age, gender, problems]);
         })
         .then(result => {
@@ -91,7 +91,7 @@ const createUser = (request, response) => {
           }
           userId = result.rows[0].id;
 
-          // Вставка записи в таблицу user_changes
+          // Вставка записи в таблицу person_changes
           return insertUserChangeLog(client, userId, 'create user'); //проверить что работает
         })
         .then(insertedActionId => {
@@ -194,7 +194,7 @@ const updateUser = (request, response) => {
           values.push(id);
 
           // Создание запроса для обновления
-          const updateUserQuery = `UPDATE users SET ${fields.join(', ')} WHERE id = $${index}`;
+          const updateUserQuery = `UPDATE persons SET ${fields.join(', ')} WHERE id = $${index}`;
           return client.query(updateUserQuery, values); // Выполнение запроса обновления
         })
         .then(result => {

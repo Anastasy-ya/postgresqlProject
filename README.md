@@ -46,6 +46,63 @@ postgres://alex:AbC123dEf@ep-cool-darkness-123456.us-east-2.aws.neon.tech/dbname
 ### Скрипт для создания SQL-таблицы и заполнения ее рандомными значениями: 
 
 ```
+CREATE TABLE persons (
+    id SERIAL PRIMARY KEY,
+    first_name CHAR(3) NOT NULL,
+    last_name CHAR(3) NOT NULL,
+    age INT CHECK (age BETWEEN 18 AND 100),
+    gender CHAR(1) CHECK (gender IN ('m', 'f')),
+    problems BOOLEAN
+);
+
+CREATE OR REPLACE FUNCTION random_string(length INT) RETURNS TEXT AS $$
+DECLARE
+    result TEXT := '';
+    i INT;
+BEGIN
+    FOR i IN 1..length LOOP
+        result := result || CHR(65 + FLOOR(RANDOM() * 26)::INT);
+    END LOOP;
+    RETURN result;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION random_age() RETURNS INT AS $$
+BEGIN
+    RETURN FLOOR(RANDOM() * 83) + 18;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION random_gender() RETURNS CHAR(1) AS $$
+BEGIN
+    RETURN CASE WHEN RANDOM() < 0.5 THEN 'm' ELSE 'f' END;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION random_problems() RETURNS BOOLEAN AS $$
+BEGIN
+    RETURN RANDOM() < 0.5;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION insert_random_person(num_users INT) RETURNS VOID AS $$
+DECLARE
+    i INT;
+BEGIN
+    FOR i IN 1..num_users LOOP
+        INSERT INTO persons (first_name, last_name, age, gender, problems)
+        VALUES (random_string(3), random_string(3), random_age(), random_gender(), random_problems());
+    END LOOP;
+END;
+$$ LANGUAGE plpgsql;
+
+SELECT insert_random_person(1000);
+
+```
+
+### Скрипт для создания SQL-таблицы с большим количеством полей и заполнения ее рандомными значениями: 
+
+```
 -- Создание таблицы users
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
@@ -109,12 +166,12 @@ SELECT insert_random_person(1000);
 ### Cкрипт для создания связанной таблицы с историей изменения первой таблицы
 
 ```
-CREATE TABLE user_changes (
+CREATE TABLE person_changes (
   action_id SERIAL PRIMARY KEY,
   user_id INTEGER NOT NULL,
   action_date TIMESTAMP NOT NULL,
   action VARCHAR(255) NOT NULL,
-  FOREIGN KEY (user_id) REFERENCES users(id)
+  FOREIGN KEY (user_id) REFERENCES persons(id)
     ON UPDATE CASCADE
     ON DELETE CASCADE
 );
