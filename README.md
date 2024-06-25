@@ -3,15 +3,17 @@ _Изучение облачной базы данных и синтаксиса
 
 JavaScript - Express.js - cors - node-postgres - express-rate-limit
 
-# Сервис работает с таблицей users возвращает список пользователей, 
-# создает нового или изменяет существующего, отправляя лог изменений в user_changes
+## Сервис работает с таблицей users возвращает список пользователей, создает нового или изменяет существующего, отправляя лог изменений в user_changes
 
 
 ## Ссылки
 
 https://github.com/Anastasy-ya/postgresqlProject
+<br>
 https://github.com/Anastasy-ya/history-log-users-server
+<br>
 https://github.com/Anastasy-ya/BigDB
+<br>
 
 ## Используется облачная база данных postgresql neon.tech
 
