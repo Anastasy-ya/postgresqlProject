@@ -211,7 +211,7 @@ POST http://localhost:3001/create-user
 ### change user:
 _id required_
 
-PATCH http://localhost:5432/update-user?id=200
+PATCH http://localhost:3001/update-user?id=200
 <br>
 ```
 {
@@ -225,7 +225,7 @@ PATCH http://localhost:5432/update-user?id=200
 
 ### 404:
 
-GET http://localhost:5432/sdfg
+GET http://localhost:3001/sdfg
 
 ## Планы по улучшению:
  - Написать тесты
